@@ -50,10 +50,21 @@ class GeoMap():
 
         self._data = pd.json_normalize(data) if is_list_of_dicts(data) else \
                      data if isinstance(data, pd.DataFrame) else \
-                     None        
+                     None   
+        
+    def extra_data(self):
+        return self._data
+    
+    def gdf_data(self):
+        return self._gdf
                   
     # Vẽ bản đồ đường biên của các tỉnh kèm theo màu sắc theo giá trị cột color_col  
-    def show(self, show_name=False, **kwagrs):
+    def show(self, show_name=False, custom_list=None, **kwagrs):
+        # Bổ sung theo issue yêu cầu của Gia Phúc => chỉ xem theo danh sách
+        if isinstance(custom_list, list):
+            filter = self._gdf[self._columns['geo_key']].isin(custom_list)
+            self._gdf = self._gdf[filter]
+            
         ax = self._gdf.plot(column=self._columns['color_val'], **{**self._formats, **kwagrs}) if self._data is None else \
              self._gdf.merge(self._data, how='left', left_on=self._columns['geo_key'], right_on=self._columns['data_key'])\
                       .plot(column=self._columns['color_val'], **{**self._formats, **kwagrs})
